@@ -367,6 +367,11 @@ dss.parser('name', function(i, line, block, file){
   return line;
 });
 
+// Describe parsing a selector
+dss.parser('selector', function(i, line, block, file){
+  return line;
+});
+
 // Describe parsing a description
 dss.parser('description', function(i, line, block, file){
   return line;
