@@ -180,6 +180,8 @@ var dss = (function(){
         _blocks = [],
         parsed = '',
         blocks = [],
+        submodule_blocks = [],
+        trimmed_submodule_blocks = [],
         temp = {},
         lineNum = 0;
 
@@ -336,14 +338,38 @@ var dss = (function(){
         if(_dss.detect(line))
           temp = parser(temp, _dss.normalize(line), block, lines);
       });
-      
+
       // Push to blocks if object isn't empty
-      if(_dss.size(temp))
-        blocks.push(temp);
+      if(_dss.size(temp)){
+
+        //Seperate regular blocks from submodule_blocks
+        if(temp.module !== undefined && temp.module != temp.selector && temp.module !== ''){
+          submodule_blocks.push(temp);
+          trimmed_submodule_blocks.push(temp);
+        }else{
+          blocks.push(temp);
+        }
+      }
       temp = {};
 
-    }); 
-            
+    });
+
+    //Join submodules with their parents
+    blocks.forEach(function(block){
+      submodule_blocks.forEach(function(sub_block, i){
+
+        //Add the submodule to the parent block
+        if(sub_block.module == block.selector){
+          block.children = block.children || [];
+          block.children.push(sub_block);
+          trimmed_submodule_blocks.splice(i,1);
+        }
+      });
+    });
+
+    //Append any left over submodules
+    blocks.concat(trimmed_submodule_blocks);
+
     // Execute callback with filename and blocks
     callback({ blocks: blocks });
 
@@ -360,6 +386,11 @@ dss.detector(function(line){
     return false;
   var reference = line.split("\n\n").pop();
   return !!reference.match(/.*@/);
+});
+
+// Describe parsing a module
+dss.parser('module', function(i, line, block, file){
+  return line;
 });
 
 // Describe parsing a name
